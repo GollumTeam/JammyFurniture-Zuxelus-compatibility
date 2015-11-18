@@ -1,0 +1,7 @@
+package com.gollum.jammyfurniturecompatibility.client;
+
+import com.gollum.jammyfurniturecompatibility.common.CommonProxyJammyFurnitureZuxelusCompatibility;
+
+public class ClientProxyJammyFurnitureZuxelusCompatibility extends CommonProxyJammyFurnitureZuxelusCompatibility {
+
+}
