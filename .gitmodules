@@ -1,0 +1,3 @@
+[submodule "JammyFurniture"]
+	path = JammyFurniture
+	url = git@github.com:GollumTeam/JammyFurniture.git
