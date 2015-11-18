@@ -57,7 +57,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
     
-    compile files('GollumCoreLib/build/libs/GollumCoreLib-2.0.0-'+minecraft.version+'-unmapped.jar')
+    compile files('JammyFurniture/build/libs/JammyFurniture-5.0.0-'+minecraft.version+'-unmapped.jar')
+    compile files('JammyFurniture/GollumCoreLib/build/libs/GollumCoreLib-2.0.0-'+minecraft.version+'-unmapped.jar')
 
 }
 
