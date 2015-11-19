@@ -6,6 +6,8 @@ import com.gollum.core.common.mod.GollumMod;
 import com.gollum.jammyfurniture.ModJammyFurniture;
 import com.gollum.jammyfurniturecompatibility.common.CommonProxyJammyFurnitureZuxelusCompatibility;
 import com.gollum.jammyfurniturecompatibility.common.config.ConfigJammyFunitureZuxelusCompatibility;
+import com.gollum.jammyfurniturecompatibility.inits.ModBlocks;
+import com.gollum.jammyfurniturecompatibility.inits.ModItems;
 
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
@@ -25,10 +27,12 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 public class ModJammyFurnitureZuxelusCompatibility extends GollumMod {
 
 	public final static String MODID = "JammyFurnitureZuxelusCompatibility";
-	public final static String MODNAME = "Jammy Furniture";
+	public final static String MODNAME = "Jammy Furniture Zuxelus compatibility";
 	public final static String VERSION = "1.0.0DEV";
 	public final static String MINECRAFT_VERSION = "1.7.10";
 	public final static String DEPENDENCIES = "required-after:"+ModJammyFurniture.MODID;
+	
+	public final static String ZUXELUS_MODID = "jammyfurniture";
 	
 	@Instance(ModJammyFurnitureZuxelusCompatibility.MODID)
 	public static ModJammyFurnitureZuxelusCompatibility instance;
@@ -63,24 +67,16 @@ public class ModJammyFurnitureZuxelusCompatibility extends GollumMod {
 	public void preInit(FMLPreInitializationEvent event) {
 		
 		// Initialisation des blocks
-//		ModBlocks.init ();
+		ModBlocks.init ();
 		
 		// Initialisation des items
-//		ModItems.init ();
+		ModItems.init ();
 	}
 
 	/** 2 **/
 	public void init(FMLInitializationEvent event) {
-		
-		// Initialisation les TileEntities
-//		ModTileEntities.init ();
-		
-		// Ajout des recettes
-//		ModRecipes.init ();
-		
-		// Set de l'icon du tab creative
-//		ModCreativeTab.init();
-		
+		// Enregistre les events
+		this.proxy.registerEvents();
 	}
 	
 	/** 3 **/
