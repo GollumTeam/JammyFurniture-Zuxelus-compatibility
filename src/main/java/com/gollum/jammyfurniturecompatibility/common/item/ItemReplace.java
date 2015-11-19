@@ -8,11 +8,11 @@ import java.util.HashMap;
 import com.gollum.core.tools.helper.items.HItem;
 import com.gollum.core.tools.registered.RegisteredObjects;
 import com.gollum.jammyfurniturecompatibility.ModJammyFurnitureZuxelusCompatibility;
-import com.gollum.jammyfurniturecompatibility.common.block.BlockReplace.ReplaceBlock;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -73,6 +73,10 @@ public class ItemReplace extends HItem {
 	private void trace (ItemStack is) {
 		ItemStack nIs = this.replaceItemStack(is);
 		log.message("Item transform \""+RegisteredObjects.instance().getRegisterName(this)+"\":"+is.getItemDamage()+" => \""+RegisteredObjects.instance().getRegisterName(nIs.getItem())+"\":"+nIs.getItemDamage()+"");
+	}
+	
+	@Override
+	public void registerIcons(IIconRegister iconRegister) {
 	}
 	
 	@Override
