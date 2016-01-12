@@ -22,7 +22,7 @@ minecraft {
     runDir = "eclipse"
 }
 
-version = "1.0.0-"+minecraft.version
+version = "1.0.1-"+minecraft.version
 group= "com.gollum.jammyfurniturecompatibility" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "JammyFurnitureZuxelusCompatibility"
 
