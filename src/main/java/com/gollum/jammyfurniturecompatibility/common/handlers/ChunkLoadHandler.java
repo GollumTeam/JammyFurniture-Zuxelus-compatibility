@@ -14,6 +14,7 @@ import com.sun.org.apache.xerces.internal.util.IntStack;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -92,11 +93,11 @@ public class ChunkLoadHandler {
 					Block       b = chunk.getBlock(x, y, z);
 					int         m = chunk.getBlockMetadata(x, y, z);
 					TileEntity te = chunk.getTileEntityUnsafe(x, y, z);
+					
 					if (b instanceof BlockReplace) {
-						ReplaceBlock replace = ReplaceBlock.get(b, m);
-						log.message("Block transform x="+(x*chunk.xPosition*16)+", y="+y+", z="+(z*chunk.zPosition*16)+" ,\""+RegisteredObjects.instance().getRegisterName(b)+"\":"+m+"("+Block.getIdFromBlock(b)+") => \""+replace.registerName+"\":"+replace.getMetadata(m)+"("+Block.getIdFromBlock(replace.getBlock())+")");
-						chunk.func_150807_a(x, y, z, replace.getBlock(), replace.getMetadata(m));
+						this.replaceBlock(chunk, x, y, z, (BlockReplace)b, m);
 					}
+					
 					if (te instanceof IInventory) {
 						IInventory inv = (IInventory)te;
 						for (int i = 0; i < inv.getSizeInventory(); i++) {
@@ -104,18 +105,63 @@ public class ChunkLoadHandler {
 							if (is != null && (is.getItem() instanceof ItemReplace)) {
 								ItemStack nIs = ((ItemReplace)is.getItem()).replaceItemStack(is);
 								inv.setInventorySlotContents(i, nIs);
-								log.message("Item in inventory transform x="+(x*chunk.xPosition*16)+", y="+y+", z="+(z*chunk.zPosition*16)+" ,\""+RegisteredObjects.instance().getRegisterName(is.getItem())+"\":"+is.getItemDamage()+" => \""+RegisteredObjects.instance().getRegisterName(nIs.getItem())+"\":"+nIs.getItemDamage()+"");
+								log.message("Handler item in inventory transform x="+(x*chunk.xPosition*16)+", y="+y+", z="+(z*chunk.zPosition*16)+" ,\""+RegisteredObjects.instance().getRegisterName(is.getItem())+"\":"+is.getItemDamage()+" => \""+RegisteredObjects.instance().getRegisterName(nIs.getItem())+"\":"+nIs.getItemDamage()+"");
 							}
 							if (is != null && (is.getItem() instanceof ItemBlockReplace)) {
 								ItemStack nIs = ((ItemBlockReplace)is.getItem()).replaceItemStack(is);
 								inv.setInventorySlotContents(i, nIs);
-								log.message("Item in inventory transform x="+(x*chunk.xPosition*16)+", y="+y+", z="+(z*chunk.zPosition*16)+" ,\""+RegisteredObjects.instance().getRegisterName(is.getItem())+"\":"+is.getItemDamage()+" => \""+RegisteredObjects.instance().getRegisterName(nIs.getItem())+"\":"+nIs.getItemDamage()+"");
+								log.message("Handler item in inventory transform x="+(x*chunk.xPosition*16)+", y="+y+", z="+(z*chunk.zPosition*16)+" ,\""+RegisteredObjects.instance().getRegisterName(is.getItem())+"\":"+is.getItemDamage()+" => \""+RegisteredObjects.instance().getRegisterName(nIs.getItem())+"\":"+nIs.getItemDamage()+"");
 							}
 						}
 					}
 				}
 			}
 		}
+	}
+	
+	private void replaceBlock(Chunk chunk, int x, int y, int z, BlockReplace block, int metadata) {
+		
+		ReplaceBlock target = ReplaceBlock.get(block, metadata);
+		TileEntity te = chunk.func_150806_e(x, y, z);
+		ItemStack[] itemStacks = new ItemStack[0];
+		
+		try {
+			
+			block.replaceMutex = false;
+			
+			if (te instanceof IInventory) {
+				
+				IInventory inventory = (IInventory) te;
+				
+				itemStacks = new ItemStack[inventory.getSizeInventory()];
+				for (int i = 0; i < inventory.getSizeInventory(); i++) {
+					itemStacks[i] = inventory.getStackInSlot(i);
+					inventory.setInventorySlotContents(i, null);
+				}
+			}
+			
+			chunk.func_150812_a(x, y, z, te);
+			chunk.removeTileEntity(x, y, z);
+			chunk.func_150807_a(x, y, z, target.getBlock(), target.getMetadata(metadata));
+			
+			log.message("Handler block transform x="+(x+chunk.xPosition*16)+", y="+y+", z="+(z+chunk.zPosition*16)+" ,\""+RegisteredObjects.instance().getRegisterName(block)+"\":"+metadata+"("+Block.getIdFromBlock(block)+") => \""+target.registerName+"\":"+target.getMetadata(metadata)+"("+Block.getIdFromBlock(target.getBlock())+")");
+			
+			te = chunk.func_150806_e(x, y, z);
+			if (te instanceof IInventory) {
+				
+				IInventory inventory = (IInventory) te;
+				
+				for (int i = 0; i < inventory.getSizeInventory() && i < itemStacks.length; i++) {
+					inventory.setInventorySlotContents(i, itemStacks[i]);
+				}
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			block.replaceMutex = true;
+		}
+		
 	}
 	
 	@SubscribeEvent

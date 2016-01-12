@@ -124,7 +124,7 @@ public class BlockReplace extends HBlockContainer {
 	private String modId;
 	private ReplaceBlock[] targets = new ReplaceBlock[0xF];
 	
-	private boolean replaceMutex = true;
+	public boolean replaceMutex = true;
 	
 	public BlockReplace(String modId, String registerName, Block block) {
 		this(modId, registerName, new ReplaceBlock(block));
@@ -219,8 +219,8 @@ public class BlockReplace extends HBlockContainer {
 				}
 				
 				ReplaceBlock target = ReplaceBlock.get(block, metadata);
-				w.setBlock(x, y, z, target.getBlock(), target.getMetadata(metadata), 2);
 				w.setTileEntity(x, y, z, te);
+				w.setBlock(x, y, z, target.getBlock(), target.getMetadata(metadata), 2);
 				te = w.getTileEntity(x, y, z);
 				
 				this.trace(metadata, x, y, z);
@@ -240,6 +240,12 @@ public class BlockReplace extends HBlockContainer {
 			
 			this.replaceMutex = true;
 		}
+	}
+	
+	/**
+	 * Libère les items de l'inventory
+	 */
+	public void breakBlockInventory(World world, int x, int y, int z, Block oldBlock) {
 	}
 	
 	//////////////////////////
@@ -340,7 +346,7 @@ public class BlockReplace extends HBlockContainer {
 	////////////
 	// Events //
 	////////////
-
+	
 	@Override
 	public void updateTick(World w, int x, int y, int z, Random r) {
 		replaceBlock(w, x, y, z);
@@ -380,7 +386,9 @@ public class BlockReplace extends HBlockContainer {
 	@Override
 	public void breakBlock(World w, int x, int y, int z, Block p_149749_5_, int p_149749_6_) {
 		replaceBlock(w, x, y, z);
-		ReplaceBlock.get(this).getBlock().breakBlock(w, x, y, z, p_149749_5_, p_149749_6_);
+		if (this.replaceMutex) {
+			ReplaceBlock.get(this).getBlock().breakBlock(w, x, y, z, p_149749_5_, p_149749_6_);
+		}
 	}
 	
 	@Override
