@@ -28,7 +28,7 @@ public class ModJammyFurnitureZuxelusCompatibility extends GollumMod {
 
 	public final static String MODID = "JammyFurnitureZuxelusCompatibility";
 	public final static String MODNAME = "Jammy Furniture Zuxelus compatibility";
-	public final static String VERSION = "1.0.2DEV";
+	public final static String VERSION = "1.0.2";
 	public final static String MINECRAFT_VERSION = "1.7.10";
 	public final static String DEPENDENCIES = "required-after:"+ModJammyFurniture.MODID;
 	
