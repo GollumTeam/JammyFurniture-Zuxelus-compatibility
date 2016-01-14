@@ -2,87 +2,118 @@ package com.gollum.jammyfurniturecompatibility.common.handlers;
 
 import static com.gollum.jammyfurniturecompatibility.ModJammyFurnitureZuxelusCompatibility.log;
 
-import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.gollum.core.tools.registered.RegisteredObjects;
 import com.gollum.jammyfurniturecompatibility.common.block.BlockReplace;
 import com.gollum.jammyfurniturecompatibility.common.block.BlockReplace.ReplaceBlock;
 import com.gollum.jammyfurniturecompatibility.common.item.ItemBlockReplace;
 import com.gollum.jammyfurniturecompatibility.common.item.ItemReplace;
-import com.sun.org.apache.xerces.internal.util.IntStack;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IProgressUpdate;
-import net.minecraft.world.MinecraftException;
-import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraftforge.event.world.ChunkDataEvent.Load;
 import net.minecraftforge.event.world.ChunkDataEvent.Save;
+import net.minecraftforge.event.world.WorldEvent;;
 
 public class ChunkLoadHandler {
 	
 	public static final String KEY_CHECK_SAVE_CHUNK = "JammyZuxelusCompatibility";
 	
-	public HashMap<Integer, HashMap<Integer, HashMap<Integer, Boolean>>> parsed = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Boolean>>>();
+	private static TreeMap<Integer, TreeSet<String>> running = new TreeMap<Integer, TreeSet <String>> ();
+	private static TreeMap<Integer, TreeSet<String>> parsed = new TreeMap<Integer, TreeSet<String>> ();
+
+	@SubscribeEvent
+	public void onWorldLoad (WorldEvent.Load event) {
+		if (event.world.isRemote) {
+			return;
+		}
+		int wId = System.identityHashCode(event.world);
+		if (running.containsKey(wId)) {
+			running.remove(wId);
+		}
+		running.put(wId, new TreeSet<String>());
+		
+		if (parsed.containsKey(wId)) {
+			parsed.remove(wId);
+		}
+		parsed.put(wId, new TreeSet<String>());
+	}
 	
 	@SubscribeEvent
 	public void onLoad (Load event) {
+		
 		Chunk c = event.getChunk();
 		NBTTagCompound d = event.getData();
+		
+		if (c.worldObj.isRemote) {
+			return;
+		}
+		
 		try {
 			if (
 				(
 					!d.hasKey(KEY_CHECK_SAVE_CHUNK) || 
 					!d.getBoolean(KEY_CHECK_SAVE_CHUNK)
 				) &&
-				!this.isParsed (c)
+				!this.isParsed (c) &&
+				!this.isRunning(c)
 			) {	
 				log.debug("Migrate chunk start :", c.xPosition, c.zPosition);
-				this.markParsed (c);
+				this.markRunning (c);
 				this.migrate(c);
+				this.markParsed (c);
 				log.debug("Migrate chunk end :", c.xPosition, c.zPosition);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
+		if (!this.isRunning(c)) {
+			this.markParsed (c);
+		}
 	}
 	
-	private boolean isParsed(Chunk c) {
-		
+	public static boolean isParsed(Chunk c) {
 		int wId = System.identityHashCode(c.worldObj);
-		
-		return
-			this.parsed.containsKey(wId) &&
-			this.parsed.get(wId).containsKey(c.xPosition) &&
-			this.parsed.get(wId).get(c.xPosition).containsKey(c.zPosition) &&
-			this.parsed.get(wId).get(c.xPosition).get(c.zPosition)
-		;
+		return parsed.containsKey(wId) && parsed.get(wId).contains(getChunckKey(c));
 	}
 	
-	private void markParsed(Chunk c) {
-		
+	private static void markParsed(Chunk c) {
 		int wId = System.identityHashCode(c.worldObj);
-		
-		if (!this.parsed.containsKey(wId)) {
-			this.parsed.put(wId, new HashMap<Integer, HashMap<Integer, Boolean>>());
+		if (!parsed.containsKey(wId)) {
+			parsed.put(wId, new TreeSet<String>());
 		}
-		if (!this.parsed.get(wId).containsKey(c.xPosition)) {
-			this.parsed.get(wId).put(c.xPosition, new HashMap<Integer, Boolean>());
+		if (!isParsed(c)) {
+			parsed.get(wId).add(getChunckKey(c));
 		}
-		this.parsed.get(wId).get(c.xPosition).put(c.zPosition, true);
+	}
+	
+	public static boolean isRunning(Chunk c) {
+		int wId = System.identityHashCode(c.worldObj);
+		return running.containsKey(wId) && running.get(wId).contains(getChunckKey(c));
+	}
+	
+	private static void markRunning(Chunk c) {
+		int wId = System.identityHashCode(c.worldObj);
+		if (!running.containsKey(wId)) {
+			running.put(wId, new TreeSet<String>());
+		}
+		if (!isRunning(c)) {
+			running.get(wId).add(getChunckKey(c));
+		}
+	}
+	
+	private static String getChunckKey(Chunk c) {
+		return c.xPosition+"x"+c.zPosition;
 	}
 	
 	private void migrate(Chunk chunk) {
@@ -127,8 +158,6 @@ public class ChunkLoadHandler {
 		
 		try {
 			
-			block.replaceMutex = false;
-			
 			if (te instanceof IInventory) {
 				
 				IInventory inventory = (IInventory) te;
@@ -158,14 +187,15 @@ public class ChunkLoadHandler {
 			
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			block.replaceMutex = true;
 		}
 		
 	}
 	
 	@SubscribeEvent
 	public void onSave (Save event) {
+		if (event.getChunk().worldObj.isRemote) {
+			return;
+		}
 		NBTTagCompound d = event.getData();
 		d.setBoolean(KEY_CHECK_SAVE_CHUNK, true);
 	}

@@ -13,6 +13,7 @@ import com.gollum.core.tools.registered.RegisteredObjects;
 import com.gollum.core.utils.reflection.DeobfuscateName;
 import com.gollum.core.utils.reflection.Reflection;
 import com.gollum.jammyfurniturecompatibility.ModJammyFurnitureZuxelusCompatibility;
+import com.gollum.jammyfurniturecompatibility.common.handlers.ChunkLoadHandler;
 import com.gollum.jammyfurniturecompatibility.common.item.ItemBlockReplace;
 
 import cpw.mods.fml.common.Loader;
@@ -42,6 +43,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -124,7 +126,7 @@ public class BlockReplace extends HBlockContainer {
 	private String modId;
 	private ReplaceBlock[] targets = new ReplaceBlock[0xF];
 	
-	public boolean replaceMutex = true;
+	private boolean replaceMutex = true;
 	
 	public BlockReplace(String modId, String registerName, Block block) {
 		this(modId, registerName, new ReplaceBlock(block));
@@ -195,7 +197,9 @@ public class BlockReplace extends HBlockContainer {
 	
 	private void replaceBlock(World w, int x, int y, int z) {
 		
-		if (this.replaceMutex) {
+		Chunk c = w.getChunkFromBlockCoords(x, z);
+		
+		if (this.replaceMutex && ChunkLoadHandler.isParsed(c)) {
 			
 			this.replaceMutex = false;
 			
@@ -386,9 +390,6 @@ public class BlockReplace extends HBlockContainer {
 	@Override
 	public void breakBlock(World w, int x, int y, int z, Block p_149749_5_, int p_149749_6_) {
 		replaceBlock(w, x, y, z);
-		if (this.replaceMutex) {
-			ReplaceBlock.get(this).getBlock().breakBlock(w, x, y, z, p_149749_5_, p_149749_6_);
-		}
 	}
 	
 	@Override
@@ -845,10 +846,6 @@ public class BlockReplace extends HBlockContainer {
 
 	public boolean canSustainPlant(IBlockAccess world, int x, int y, int z, ForgeDirection direction, IPlantable plantable) {
 		return ReplaceBlock.get(this, world.getBlockMetadata(x, y, z)).getBlock().canSustainPlant(world, x, y, z, direction, plantable);
-	}
-	
-	public int getLightOpacity(IBlockAccess world, int x, int y, int z) {
-		return ReplaceBlock.get(this, world.getBlockMetadata(x, y, z)).getBlock().getLightOpacity(world, x, y, z);
 	}
 	
 	public boolean canEntityDestroy(IBlockAccess world, int x, int y, int z, Entity entity) {
